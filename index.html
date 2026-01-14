@@ -15,6 +15,16 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
+        /* Define Gill Sans MT font stack */
+        @font-face {
+            font-family: 'Gill Sans MT';
+            src: local('Gill Sans MT'), local('Gill Sans'), local('Calibri'), sans-serif;
+        }
+
+        body {
+            font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', sans-serif;
+        }
+
         /* Custom scrollbar for table */
         ::-webkit-scrollbar {
             width: 8px;
@@ -30,24 +40,61 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8; 
         }
+        
+        /* Animation for category buttons */
+        .category-btn {
+            transition: all 0.2s ease;
+        }
+        .category-btn.active {
+            background-color: #eab308; /* Helios Yellow */
+            color: white;
+            border-color: #eab308;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
     </style>
+    
+    <!-- Configure Tailwind theme to match Helios gold/yellow if needed -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        helios: {
+                            50: '#fefce8',
+                            100: '#fef9c3',
+                            400: '#facc15',
+                            500: '#eab308', /* Primary Gold/Yellow */
+                            600: '#ca8a04',
+                            900: '#0f172a', /* Slate 900 */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Gill Sans MT"', '"Gill Sans"', 'Calibri', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 <body class="bg-gray-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
     <!-- Header -->
-    <header class="bg-slate-900 text-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <header class="bg-white text-slate-900 shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="bg-yellow-500 p-2 rounded-lg text-slate-900">
-                        <i data-lucide="film" class="w-7 h-7"></i>
-                    </div>
+                <div class="flex items-center gap-4">
+                    <!-- Logo Image -->
+                    <img src="Helios logo pos.png" alt="Helios Biograf & Kulturhus" class="h-12 w-auto object-contain">
+                    
+                    <div class="hidden md:block h-8 w-px bg-gray-200"></div> <!-- Divider -->
+                    
                     <div>
-                        <h1 class="text-2xl font-bold tracking-tight">Helios Biograf & Kulturhus</h1>
-                        <p class="text-slate-400 text-sm">Salgsdashboard 2025</p>
+                        <h1 class="text-xl font-bold tracking-tight text-slate-900 uppercase">Salgsdashboard</h1>
+                        <p class="text-slate-500 text-sm">Oversigt for 2025</p>
                     </div>
                 </div>
-                <button onclick="exportToCSV()" class="flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-slate-900 px-4 py-2 rounded-lg font-semibold transition-colors text-sm shadow-md">
+                <button onclick="exportToCSV()" class="flex items-center justify-center gap-2 bg-helios-500 hover:bg-helios-400 text-white px-5 py-2.5 rounded-full font-semibold transition-colors text-sm shadow-md tracking-wide">
                     <i data-lucide="download" class="w-4 h-4"></i>
                     Eksportér til Excel
                 </button>
@@ -58,6 +105,28 @@
     <!-- Main Content -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
         
+        <!-- Category Filter -->
+        <div class="flex flex-wrap gap-2 overflow-x-auto pb-2" id="category-filters">
+            <button onclick="filterCategory('Alle')" class="category-btn active px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-semibold text-slate-600 hover:bg-gray-50">
+                Alle
+            </button>
+            <button onclick="filterCategory('Film')" class="category-btn px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-semibold text-slate-600 hover:bg-gray-50">
+                Film
+            </button>
+            <button onclick="filterCategory('Foredrag')" class="category-btn px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-semibold text-slate-600 hover:bg-gray-50">
+                Foredrag
+            </button>
+            <button onclick="filterCategory('Musik')" class="category-btn px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-semibold text-slate-600 hover:bg-gray-50">
+                Musik
+            </button>
+             <button onclick="filterCategory('Opera')" class="category-btn px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-semibold text-slate-600 hover:bg-gray-50">
+                Opera
+            </button>
+            <button onclick="filterCategory('Comedy')" class="category-btn px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-semibold text-slate-600 hover:bg-gray-50">
+                Comedy
+            </button>
+        </div>
+
         <!-- KPI Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="kpi-container">
             <!-- Cards injected via JS -->
@@ -68,9 +137,9 @@
             
             <!-- Bar Chart -->
             <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <i data-lucide="trending-up" class="w-5 h-5 text-yellow-500"></i>
-                    Top 10: Solgte Billetter
+                <h2 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2 uppercase tracking-wide">
+                    <i data-lucide="trending-up" class="w-5 h-5 text-helios-500"></i>
+                    Top 10: <span id="chart-title-suffix">Alle Kategorier</span>
                 </h2>
                 <div class="relative h-[350px] w-full">
                     <canvas id="barChart"></canvas>
@@ -79,53 +148,56 @@
 
             <!-- Pie Chart -->
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col">
-                <h2 class="text-lg font-bold text-gray-900 mb-2">Økonomisk Fordeling</h2>
+                <h2 class="text-lg font-bold text-slate-900 mb-2 uppercase tracking-wide">Økonomi</h2>
                 <p class="text-sm text-gray-500 mb-6">Indtægt vs Udgift</p>
                 <div class="relative h-[250px] w-full flex-grow">
                     <canvas id="pieChart"></canvas>
                 </div>
-                <div class="mt-4 text-center">
-                    <p class="text-sm text-gray-500">Gns. Avance pr. Billet</p>
-                    <p class="text-2xl font-bold text-slate-800" id="avg-margin-display">0 kr.</p>
+                <div class="mt-6 text-center border-t border-gray-50 pt-4">
+                    <p class="text-sm text-gray-500 uppercase tracking-wider">Gns. Avance pr. Billet</p>
+                    <p class="text-3xl font-bold text-helios-600 mt-1" id="avg-margin-display">0 kr.</p>
                 </div>
             </div>
         </div>
 
         <!-- Data Table -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h2 class="text-lg font-bold text-gray-900">Alle Visninger & Arrangementer</h2>
+            <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50">
+                <h2 class="text-lg font-bold text-slate-900 uppercase tracking-wide">Visninger</h2>
                 <div class="relative">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
                     <input type="text" id="searchInput" placeholder="Søg efter titel..." 
-                        class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64 transition-all">
+                        class="pr-10 pl-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-helios-400 focus:border-transparent w-full sm:w-72 transition-all shadow-sm">
+                    <i data-lucide="search" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
                 </div>
             </div>
             
             <div class="overflow-x-auto max-h-[600px]">
                 <table class="w-full text-sm text-left relative">
-                    <thead class="bg-gray-50 text-gray-600 font-medium border-b border-gray-200 sticky top-0 z-10">
+                    <thead class="bg-gray-50 text-slate-600 font-semibold border-b border-gray-200 sticky top-0 z-10 uppercase text-xs tracking-wider">
                         <tr>
-                            <th class="px-6 py-4 cursor-pointer hover:bg-gray-100 group" onclick="sortTable('title')">
-                                Titel <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            <th class="px-6 py-4 cursor-pointer hover:bg-gray-100 group transition-colors" onclick="sortTable('title')">
+                                Titel <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-30 group-hover:opacity-100"></i>
                             </th>
-                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 group" onclick="sortTable('tickets')">
-                                Billetter <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            <th class="px-6 py-4 cursor-pointer hover:bg-gray-100 group transition-colors" onclick="sortTable('category')">
+                                Kategori <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-30 group-hover:opacity-100"></i>
                             </th>
-                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 group" onclick="sortTable('revenue')">
-                                Omsætning <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 group transition-colors" onclick="sortTable('tickets')">
+                                Billetter <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-30 group-hover:opacity-100"></i>
                             </th>
-                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 hidden md:table-cell group" onclick="sortTable('income')">
-                                Indtægt <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 group transition-colors" onclick="sortTable('revenue')">
+                                Omsætning <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-30 group-hover:opacity-100"></i>
                             </th>
-                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 hidden md:table-cell group" onclick="sortTable('expense')">
-                                Udgift <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 hidden md:table-cell group transition-colors" onclick="sortTable('income')">
+                                Indtægt <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-30 group-hover:opacity-100"></i>
                             </th>
-                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 group" onclick="sortTable('profit')">
-                                Avance <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 hidden md:table-cell group transition-colors" onclick="sortTable('expense')">
+                                Udgift <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-30 group-hover:opacity-100"></i>
                             </th>
-                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 group" onclick="sortTable('marginPerTicket')">
-                                Av/Billet <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 group transition-colors" onclick="sortTable('profit')">
+                                Avance <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-30 group-hover:opacity-100"></i>
+                            </th>
+                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 group transition-colors" onclick="sortTable('marginPerTicket')">
+                                Av/Billet <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-30 group-hover:opacity-100"></i>
                             </th>
                         </tr>
                     </thead>
@@ -134,15 +206,19 @@
                     </tbody>
                 </table>
             </div>
-            <div class="p-4 border-t border-gray-100 bg-gray-50 text-xs text-gray-500 flex justify-between">
+            <div class="p-4 border-t border-gray-100 bg-gray-50 text-xs text-slate-500 flex justify-between font-medium">
                 <span id="rowCount">Henter data...</span>
-                <span>Data opdateret 2025</span>
+                <span>Opdateret 2025</span>
             </div>
         </div>
     </main>
 
     <!-- JavaScript Logic -->
     <script>
+        // Set Default Font for Chart.js to match CSS
+        Chart.defaults.font.family = "'Gill Sans MT', 'Gill Sans', 'Calibri', sans-serif";
+        Chart.defaults.color = '#475569';
+
         // --- DATA SECTION ---
         // Raw data string (cleaned format)
         const RAW_DATA = `Den sidste viking|1091|120533|96426|47437
@@ -314,7 +390,8 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
 
         // --- STATE & UTILS ---
         let allData = [];
-        let filteredData = [];
+        let displayedData = [];
+        let currentCategory = 'Alle';
         let sortConfig = { key: 'tickets', direction: 'desc' };
         let barChartInstance = null;
         let pieChartInstance = null;
@@ -322,6 +399,17 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
         // Formatter functions
         const formatCurrency = (val) => new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK', maximumFractionDigits: 0 }).format(val);
         const formatNumber = (val) => new Intl.NumberFormat('da-DK').format(val);
+
+        // Categorization Helper
+        function inferCategory(title) {
+            const t = title.toLowerCase();
+            if (t.includes('foredrag') || t.includes('aften om') || t.includes('tapas i toner')) return 'Foredrag';
+            if (t.includes('koncert') || t.includes('musik') || t.includes('jazz') || t.includes('pink floyd') || t.includes('springsteen') || t.includes('symfoniorkestret')) return 'Musik';
+            if (t.includes('opera')) return 'Opera';
+            if (t.includes('comedy') || t.includes('stand-up') || t.includes('showgirl')) return 'Comedy';
+            // Default to film for everything else
+            return 'Film';
+        }
 
         // --- PARSING LOGIC ---
         function parseData(dataStr) {
@@ -336,10 +424,58 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
                     const expense = parseInt(parts[4] || '0', 10);
                     const profit = income - expense;
                     const marginPerTicket = tickets > 0 ? (profit / tickets) : 0;
+                    const category = inferCategory(title);
 
-                    return { id: index, title, tickets, revenue, income, expense, profit, marginPerTicket };
+                    return { id: index, title, tickets, revenue, income, expense, profit, marginPerTicket, category };
                 })
                 .filter(item => item.tickets > 0);
+        }
+
+        // --- FILTER & UPDATE LOGIC ---
+        window.filterCategory = (category) => {
+            currentCategory = category;
+            
+            // Update buttons styling
+            const buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => {
+                if (btn.textContent.trim() === category) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Update Data
+            if (category === 'Alle') {
+                displayedData = [...allData];
+            } else {
+                displayedData = allData.filter(item => item.category === category);
+            }
+            
+            // Re-apply current sort
+            sortDisplayedData();
+
+            // Update UI
+            document.getElementById('chart-title-suffix').textContent = category === 'Alle' ? 'Alle Kategorier' : category;
+            renderKPIs(displayedData);
+            renderTable(); // renderTable uses displayedData
+            
+            // Handle search within category
+            const searchVal = document.getElementById('searchInput').value;
+            if(searchVal) {
+                // Trigger search event logic manually
+                const term = searchVal.toLowerCase();
+                displayedData = displayedData.filter(item => item.title.toLowerCase().includes(term));
+                renderTable();
+            }
+        };
+
+        function sortDisplayedData() {
+            displayedData.sort((a, b) => {
+                if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
         }
 
         // --- RENDER FUNCTIONS ---
@@ -354,77 +490,93 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
                 profit: acc.profit + curr.profit
             }), { tickets: 0, revenue: 0, income: 0, expense: 0, profit: 0 });
 
+            // Using relative positioning and absolute icons for "inside" look
             const kpiHTML = `
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-start justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 mb-1">Solgte Billetter</p>
-                        <h3 class="text-2xl font-bold text-gray-900">${formatNumber(totals.tickets)}</h3>
-                        <p class="text-xs mt-2 font-medium text-blue-600">Total for 2025</p>
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
+                    <div class="relative z-10">
+                        <p class="text-sm font-semibold text-gray-400 mb-1 uppercase tracking-wider">Solgte Billetter</p>
+                        <h3 class="text-3xl font-bold text-slate-900">${formatNumber(totals.tickets)}</h3>
+                        <p class="text-xs mt-2 font-medium text-helios-600 bg-helios-50 inline-block px-2 py-1 rounded">Total</p>
                     </div>
-                    <div class="p-3 rounded-lg text-blue-600 bg-blue-50">
-                        <!-- Ticket icon -->
-                        <i data-lucide="ticket" class="w-6 h-6"></i>
+                    <div class="absolute -bottom-4 -right-4 text-helios-100 transform rotate-12 transition-transform group-hover:scale-110 duration-300">
+                        <!-- Ticket icon as watermark -->
+                        <i data-lucide="ticket" class="w-32 h-32 opacity-80"></i>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-start justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 mb-1">Omsætning</p>
-                        <h3 class="text-2xl font-bold text-gray-900">${formatCurrency(totals.revenue)}</h3>
-                        <p class="text-xs mt-2 font-medium text-green-600">Brutto Salg</p>
+                
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
+                    <div class="relative z-10">
+                        <p class="text-sm font-semibold text-gray-400 mb-1 uppercase tracking-wider">Omsætning</p>
+                        <h3 class="text-3xl font-bold text-slate-900">${formatCurrency(totals.revenue)}</h3>
+                        <p class="text-xs mt-2 font-medium text-green-600 bg-green-50 inline-block px-2 py-1 rounded">Brutto</p>
                     </div>
-                    <div class="p-3 rounded-lg text-green-600 bg-green-50 flex items-center justify-center">
-                        <!-- Custom KR coins icon -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+                    <div class="absolute -bottom-4 -right-4 text-green-50 transform rotate-12 transition-transform group-hover:scale-110 duration-300 pointer-events-none">
+                         <!-- Custom KR coins icon watermark -->
+                         <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="opacity-80">
                             <circle cx="17" cy="8" r="5"></circle>
-                            <circle cx="10" cy="14" r="8" class="fill-green-50"></circle>
+                            <circle cx="10" cy="14" r="8" class="fill-green-50/20"></circle>
                             <text x="10" y="17" text-anchor="middle" font-size="8" font-weight="bold" stroke="none" fill="currentColor">KR</text>
                         </svg>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-start justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 mb-1">Samlet Indtægt (Netto)</p>
-                        <h3 class="text-2xl font-bold text-gray-900">${formatCurrency(totals.income)}</h3>
-                        <p class="text-xs mt-2 font-medium text-indigo-600">Ekskl. moms</p>
+                
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
+                    <div class="relative z-10">
+                        <p class="text-sm font-semibold text-gray-400 mb-1 uppercase tracking-wider">Indtægt (Netto)</p>
+                        <h3 class="text-3xl font-bold text-slate-900">${formatCurrency(totals.income)}</h3>
+                        <p class="text-xs mt-2 font-medium text-blue-600 bg-blue-50 inline-block px-2 py-1 rounded">Ex. moms</p>
                     </div>
-                    <div class="p-3 rounded-lg text-indigo-600 bg-indigo-50">
-                        <i data-lucide="credit-card" class="w-6 h-6"></i>
+                    <div class="absolute -bottom-4 -right-4 text-blue-50 transform rotate-12 transition-transform group-hover:scale-110 duration-300">
+                        <i data-lucide="credit-card" class="w-32 h-32 opacity-80"></i>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-start justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 mb-1">Samlet Avance</p>
-                        <h3 class="text-2xl font-bold text-gray-900">${formatCurrency(totals.profit)}</h3>
-                        <p class="text-xs mt-2 font-medium text-purple-600">Overskudsgrad: ${totals.income > 0 ? ((totals.profit / totals.income) * 100).toFixed(1) : 0}%</p>
+                
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
+                    <div class="relative z-10">
+                        <p class="text-sm font-semibold text-gray-400 mb-1 uppercase tracking-wider">Samlet Avance</p>
+                        <h3 class="text-3xl font-bold text-slate-900">${formatCurrency(totals.profit)}</h3>
+                        <p class="text-xs mt-2 font-medium text-purple-600 bg-purple-50 inline-block px-2 py-1 rounded">
+                            ${totals.income > 0 ? ((totals.profit / totals.income) * 100).toFixed(1) : 0}% Dækningsgrad
+                        </p>
                     </div>
-                    <div class="p-3 rounded-lg text-purple-600 bg-purple-50">
-                        <i data-lucide="trending-up" class="w-6 h-6"></i>
+                    <div class="absolute -bottom-4 -right-4 text-purple-50 transform rotate-12 transition-transform group-hover:scale-110 duration-300">
+                        <i data-lucide="trending-up" class="w-32 h-32 opacity-80"></i>
                     </div>
                 </div>
             `;
             document.getElementById('kpi-container').innerHTML = kpiHTML;
             document.getElementById('avg-margin-display').textContent = formatCurrency(totals.tickets > 0 ? totals.profit / totals.tickets : 0);
             
-            // Re-render charts based on these totals
+            // Re-render charts based on filtered data
             renderCharts(data, totals);
+            
+            // Re-init icons since we injected HTML
+            lucide.createIcons();
         }
 
         // 2. Render Charts (Chart.js)
         function renderCharts(data, totals) {
-            // Bar Chart: Top 10 by Tickets
+            // Bar Chart: Top 10 by Tickets (Filtered)
             const top10 = [...data].sort((a, b) => b.tickets - a.tickets).slice(0, 10);
             
             if (barChartInstance) barChartInstance.destroy();
             const ctxBar = document.getElementById('barChart').getContext('2d');
+            
+            // Create gradient
+            let gradient = ctxBar.createLinearGradient(0, 0, 400, 0);
+            gradient.addColorStop(0, '#eab308'); // yellow-500
+            gradient.addColorStop(1, '#ca8a04'); // yellow-600
+
             barChartInstance = new Chart(ctxBar, {
                 type: 'bar',
                 data: {
-                    labels: top10.map(d => d.title.length > 25 ? d.title.substring(0,25) + '...' : d.title),
+                    labels: top10.map(d => d.title.length > 30 ? d.title.substring(0,30) + '...' : d.title),
                     datasets: [{
                         label: 'Antal Billetter',
                         data: top10.map(d => d.tickets),
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 4
+                        backgroundColor: gradient,
+                        borderRadius: 6,
+                        barThickness: 24
                     }]
                 },
                 options: {
@@ -432,16 +584,34 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { family: "'Gill Sans MT', sans-serif", size: 14 },
+                            bodyFont: { family: "'Gill Sans MT', sans-serif", size: 13 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
                     },
                     scales: {
-                        x: { beginAtZero: true, grid: { display: false } },
-                        y: { grid: { display: false } }
+                        x: { 
+                            beginAtZero: true, 
+                            grid: { display: false },
+                            ticks: { font: { family: "'Gill Sans MT', sans-serif" } }
+                        },
+                        y: { 
+                            grid: { display: false },
+                            ticks: { 
+                                font: { family: "'Gill Sans MT', sans-serif", size: 11, weight: '500' },
+                                color: '#475569'
+                            } 
+                        }
                     }
                 }
             });
 
-            // Pie Chart: Income vs Expense
+            // Pie Chart: Income vs Expense (Filtered)
             if (pieChartInstance) pieChartInstance.destroy();
             const ctxPie = document.getElementById('pieChart').getContext('2d');
             pieChartInstance = new Chart(ctxPie, {
@@ -450,16 +620,24 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
                     labels: ['Overskud', 'Udgifter'],
                     datasets: [{
                         data: [totals.profit, totals.expense],
-                        backgroundColor: ['#22c55e', '#ef4444'],
+                        backgroundColor: ['#22c55e', '#ef4444'], // Green, Red
+                        hoverOffset: 4,
                         borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '60%',
+                    cutout: '70%',
                     plugins: {
-                        legend: { position: 'bottom' }
+                        legend: { 
+                            position: 'bottom',
+                            labels: {
+                                font: { family: "'Gill Sans MT', sans-serif", size: 12 },
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
                     }
                 }
             });
@@ -470,24 +648,33 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            filteredData.forEach(item => {
+            displayedData.forEach(item => {
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-blue-50 transition-colors border-b border-gray-50';
+                tr.className = 'hover:bg-helios-50 transition-colors border-b border-gray-50';
                 
                 // Badge Logic
                 let badgeClass = 'bg-red-100 text-red-700';
                 if (item.marginPerTicket > 50) badgeClass = 'bg-green-100 text-green-700';
-                else if (item.marginPerTicket > 20) badgeClass = 'bg-yellow-100 text-yellow-700';
+                else if (item.marginPerTicket > 20) badgeClass = 'bg-helios-100 text-helios-700'; // Yellow/Gold
+                
+                // Category badge color
+                let catColor = 'bg-gray-100 text-gray-600';
+                if(item.category === 'Film') catColor = 'bg-blue-50 text-blue-600';
+                if(item.category === 'Musik') catColor = 'bg-pink-50 text-pink-600';
+                if(item.category === 'Foredrag') catColor = 'bg-purple-50 text-purple-600';
 
                 tr.innerHTML = `
-                    <td class="px-6 py-4 font-medium text-gray-900">${item.title}</td>
-                    <td class="px-6 py-4 text-right">${formatNumber(item.tickets)}</td>
-                    <td class="px-6 py-4 text-right text-gray-600">${formatCurrency(item.revenue)}</td>
-                    <td class="px-6 py-4 text-right text-gray-500 hidden md:table-cell">${formatCurrency(item.income)}</td>
-                    <td class="px-6 py-4 text-right text-red-500 hidden md:table-cell">${item.expense > 0 ? formatCurrency(item.expense) : '-'}</td>
-                    <td class="px-6 py-4 text-right text-green-600 font-medium">${formatCurrency(item.profit)}</td>
+                    <td class="px-6 py-4 font-semibold text-slate-800">${item.title}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded text-xs font-medium ${catColor}">${item.category}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right font-medium text-slate-600">${formatNumber(item.tickets)}</td>
+                    <td class="px-6 py-4 text-right text-slate-500">${formatCurrency(item.revenue)}</td>
+                    <td class="px-6 py-4 text-right text-slate-400 hidden md:table-cell">${formatCurrency(item.income)}</td>
+                    <td class="px-6 py-4 text-right text-red-400 hidden md:table-cell">${item.expense > 0 ? formatCurrency(item.expense) : '-'}</td>
+                    <td class="px-6 py-4 text-right text-green-600 font-bold">${formatCurrency(item.profit)}</td>
                     <td class="px-6 py-4 text-right">
-                        <span class="px-2 py-1 rounded-full text-xs font-medium ${badgeClass}">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${badgeClass}">
                             ${formatCurrency(item.marginPerTicket)}
                         </span>
                     </td>
@@ -495,8 +682,8 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
                 tbody.appendChild(tr);
             });
 
-            document.getElementById('rowCount').textContent = `Viser ${filteredData.length} rækker`;
-            lucide.createIcons(); // Refresh icons if any injected
+            document.getElementById('rowCount').textContent = `Viser ${displayedData.length} rækker`;
+            lucide.createIcons(); 
         }
 
         // --- INTERACTION ---
@@ -510,35 +697,28 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
                 sortConfig.direction = 'desc';
             }
 
-            filteredData.sort((a, b) => {
-                if (a[key] < b[key]) return sortConfig.direction === 'asc' ? -1 : 1;
-                if (a[key] > b[key]) return sortConfig.direction === 'asc' ? 1 : -1;
-                return 0;
-            });
+            sortDisplayedData();
             renderTable();
         };
 
         // Searching
         document.getElementById('searchInput').addEventListener('keyup', (e) => {
             const term = e.target.value.toLowerCase();
-            filteredData = allData.filter(item => item.title.toLowerCase().includes(term));
+            // Filter from current displayed category dataset
+            let baseData = currentCategory === 'Alle' ? allData : allData.filter(i => i.category === currentCategory);
             
-            // If sort is active, re-sort
-            if(sortConfig.key) {
-                 filteredData.sort((a, b) => {
-                    if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
-                    if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
-                    return 0;
-                });
-            }
+            displayedData = baseData.filter(item => item.title.toLowerCase().includes(term));
+            
+            sortDisplayedData();
             renderTable();
         });
 
         // Export
         window.exportToCSV = () => {
-            const headers = ["Titel", "Billetter", "Omsætning", "Indtægt", "Udgift", "Avance", "Avance/Billet"];
-            const rows = filteredData.map(item => [
+            const headers = ["Titel", "Kategori", "Billetter", "Omsætning", "Indtægt", "Udgift", "Avance", "Avance/Billet"];
+            const rows = displayedData.map(item => [
                 `"${item.title}"`,
+                item.category,
                 item.tickets,
                 item.revenue,
                 item.income,
@@ -564,9 +744,10 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
         (function init() {
             allData = parseData(RAW_DATA);
             // Default sort by tickets
-            filteredData = [...allData].sort((a,b) => b.tickets - a.tickets);
+            displayedData = [...allData].sort((a,b) => b.tickets - a.tickets);
             
-            renderKPIs(allData); // Use allData for KPIs always, unless we want KPIs to filter? usually KPIs show global context, Table shows details. Let's keep KPIs global for now.
+            // Initial Render
+            renderKPIs(displayedData); 
             renderTable();
             lucide.createIcons();
         })();
