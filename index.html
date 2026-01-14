@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helios Biograf & Kulturhus - Dashboard 2025</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Custom scrollbar for table */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-yellow-500 p-2 rounded-lg text-slate-900">
+                        <i data-lucide="film" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight">Helios Biograf & Kulturhus</h1>
+                        <p class="text-slate-400 text-sm">Salgsdashboard 2025</p>
+                    </div>
+                </div>
+                <button onclick="exportToCSV()" class="flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-slate-900 px-4 py-2 rounded-lg font-semibold transition-colors text-sm shadow-md">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    Eksportér til Excel
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
+        
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="kpi-container">
+            <!-- Cards injected via JS -->
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Bar Chart -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <i data-lucide="trending-up" class="w-5 h-5 text-yellow-500"></i>
+                    Top 10: Solgte Billetter
+                </h2>
+                <div class="relative h-[350px] w-full">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Pie Chart -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col">
+                <h2 class="text-lg font-bold text-gray-900 mb-2">Økonomisk Fordeling</h2>
+                <p class="text-sm text-gray-500 mb-6">Indtægt vs Udgift</p>
+                <div class="relative h-[250px] w-full flex-grow">
+                    <canvas id="pieChart"></canvas>
+                </div>
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-gray-500">Gns. Avance pr. Billet</p>
+                    <p class="text-2xl font-bold text-slate-800" id="avg-margin-display">0 kr.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h2 class="text-lg font-bold text-gray-900">Alle Visninger & Arrangementer</h2>
+                <div class="relative">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                    <input type="text" id="searchInput" placeholder="Søg efter titel..." 
+                        class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64 transition-all">
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto max-h-[600px]">
+                <table class="w-full text-sm text-left relative">
+                    <thead class="bg-gray-50 text-gray-600 font-medium border-b border-gray-200 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-6 py-4 cursor-pointer hover:bg-gray-100 group" onclick="sortTable('title')">
+                                Titel <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            </th>
+                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 group" onclick="sortTable('tickets')">
+                                Billetter <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            </th>
+                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 group" onclick="sortTable('revenue')">
+                                Omsætning <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            </th>
+                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 hidden md:table-cell group" onclick="sortTable('income')">
+                                Indtægt <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            </th>
+                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 hidden md:table-cell group" onclick="sortTable('expense')">
+                                Udgift <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            </th>
+                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 group" onclick="sortTable('profit')">
+                                Avance <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            </th>
+                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-gray-100 group" onclick="sortTable('marginPerTicket')">
+                                Av/Billet <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50 group-hover:opacity-100"></i>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-gray-100">
+                        <!-- Rows injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-4 border-t border-gray-100 bg-gray-50 text-xs text-gray-500 flex justify-between">
+                <span id="rowCount">Henter data...</span>
+                <span>Data opdateret 2025</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- DATA SECTION ---
+        // Raw data string (cleaned format)
+        const RAW_DATA = `Den sidste viking|1091|120533|96426|47437
+Under stjernerne på himlen|636|46509|37207|18436
+Ternet Ninja 3|498|41827|33462|16852
+Hjem kære hjem|436|27955|22364|1173
+Rejseholdet - Det første mord|436|25968|20774|10501
+Det nye år - Dk undertekster|333|24387|19510|10327
+Bridget Jones - Vild med ham|331|21012|16810|8500
+Here|317|17494|13995|7112
+En Minecraft film - DK Tale|299|20224|16179|8090
+A Complete Unknown|294|22196|17757|8948
+I’m Still Here|276|14709|11767|5115
+Pigen med nålen|266|23370|18696|9462
+Børnene fra Sølvgade 2: tager kampen op|263|21316|17053|8640
+For fuld musik|259|14816|11853|0
+Vi har stadig i morgen|253|13194|10555|4562
+MGP 2025|251|0|0
+Musikalsk Fortælling om Kim Larsen - 50 år med Gas|240|73780|59024|0
+Tapas i Toner (4 foredrag)|230|12560|10048|0
+A Big Bold Beautiful Journey|224|11266|9013|0
+Downton Abbey – Den store finale|215|19557|15646|7918
+Foredrag: Styrk dit tarmmikrobiom og hold dig rask|202|1000|800|0
+Avatar: Fire and Ash 2D|192|16954|13563|0
+Anna Syberg - Vildblomsten fra Fyn|192|9600|7680|0
+Radio 100 Comedy Nights on Tour|190|28470|22776|0
+Madklubben - Hjemme igen|186|16713|13370|6805
+Foredrag: Den meningsfulde hjerne - 2025|184|1000|800|0
+IVAN PEDERSEN og “DANMARKS NÆSTBEDSTE TRIO”|180|38563|30850|0
+Livsbekræftende foredrag med Esben Dalgaard|178|7120|5696|0
+Foredrag: Kunstig intelligens: fra IT til samfund|177|1000|800|0
+Comedy Nights on Tour - Sept 2025|168|25200|20160|0
+Honey|168|13782|11026|5708
+Roadtrip Comedy Tour 2025|148|37000|29600|0
+Jurassic World: Rebirth|144|10290|8232|2976
+Rie Rasmussen – Landet 2025|140|30100|24080|0
+Zootropolis 2 - Dk Tale|139|9878|7902|0
+Foredrag: Havets kollaps og vejen tilbage|135|1000|800|0
+Det andet offer|133|11628|9302|4771
+Vaiana 2 - Dk Tale|130|9064|7251|3896
+Lilo & Stitch - Dk Tale|128|8598|6878|3162
+One Battle After Another|127|11231|8985|4492
+Foredrag: Udforskningen af Grønland – før og nu - 2025|124|1000|800|0
+Tafiti og det store ørkeneventyr|120|8500|6800|3443
+Foredrag: Forædlingen af mennesket – før og nu|116|1000|800|0
+Foredrag: Kan vi finde liv udenfor Jorden?|115|1000|800|0
+Foredrag: Dybhavet – nyt fra en ukendt verden - 2025|113|1000|800|0
+Mission: Impossible - The Final Reckoning|111|8186|6549|3361
+Foredrag: På tur i Mælkevejen igennem rum og tid - 2025|111|1000|800|0
+Hundemand - Dk Tale|108|7452|5962|0
+Vermiglio – Landsbyen mellem bjergene|107|7726|6181|0
+Springsteen: Deliver Me from Nowhere|104|7992|6394|0
+F1|104|7450|5960|0
+Maria|103|7834|6267|3229
+Lykkens Visdom - Dalai Lamas rejse mod fred|95|7220|5776|0
+Sonic the Hedgehog 3 - Dk Tale|95|6160|4928|2103
+“Wish You Were Here” - Pink Floyds vanskelige genistreg|92|6880|5504|0
+The Pink Floyd & Syd Barrett Story|89|3380|2704|0
+Elio - DK Tale|88|6102|4882|1899
+Flow|84|5938|4750|0
+Foredrag: DNA’en omkring os - 2025|83|1000|800|0
+Lotte & Totte - Min første ven|79|5554|4443|1705
+Foredrag: Vil resistente bakterier slå os ihjel? - 2025|79|1000|800|0
+The Amateur|77|7064|5651|1506
+Sønnike|75|6615|5292|4375
+FORPREMIERE: Sønnike|74|3293|2634|0
+THE MINDS OF 99 – TRE DØGN I PARKEN|69|9713|7770|0
+Koncert i Helios med pianisterne Eva Gerlach-Kling og Stefan Kling|69|6900|5520|0
+TRUMPS FØRSTE 101 DAGE: Bristede drømme|67|6700|5360|0
+NÜRNBERG|66|4972|3978|1487
+Efterår i Bourgogne|66|4948|3958|0
+Gladiator 2|66|3442|2754|984
+Jazzkoncert: Johannes Ravn Band|64|9600|7680|0
+Koncert: AP Melander|62|12400|9920|0
+Det sidste paradis på jord|61|4519|3615|1510
+One to One: John & Yoko|61|4488|3590|1293
+Koncert med GRASSOLIN|60|11200|8960|0
+Mugge og super happy|60|4056|3245|1635
+Sådan træner du din drage - DK Tale|60|4032|3226|1254
+Mig og pingvinen|59|4226|3381|1445
+Small Things Like These|57|3732|2986|1619
+Tre veninder|55|3951|3161|0
+Konklave|53|3876|3101|3561
+Elfie og den hemmelige mission|53|3664|2931|1483
+Ingen kære mor - Dk undertekster|51|4432|3546|1887
+Aften om Demens|50|7500|6000|0
+Operaforedrag: Tosca|49|2365|1892|0
+Frøet fra det hellige figentræ|47|3300|2640|1260
+DR Symfoniorkestret, Luisi & Buniatishvili|46|4600|3680|0
+8. marts festival 2025|45|4500|3600|0
+Dyrenes magiske jul|43|3046|2437|0
+Dynebio - December 2025|43|1290|1032|0
+Foredrag om gadegøgleren og filmmageren Erik Clausen|41|3290|2632|0
+No Other Land - DK tekstet|41|2898|2318|811
+Sommerbogen|40|2984|2387|0
+Elskling|39|2830|2264|1425
+Dynebio - Marts 2025|39|1140|912|0
+LANGE - BANKS - JUST|38|8170|6536|0
+Victor Peter - Danmarks nyeste jazzsensation!|38|5320|4256|0
+A Storm Foretold - Trumps første 101 dage|36|1800|1440|0
+Becoming Led Zeppelin|35|2630|2104|1200
+Kærlig hilsen, Hilde|35|2598|2078|1425
+Anora|35|2492|1994|1335
+Rejsen mod nord|35|2464|1971|0
+Asger Jorn|35|1200|960|0
+2025 Sommer Opera Kino - LA BOHEME|34|4865|3892|0
+Solitude|34|2420|1936|1510
+Heretic|33|2402|1922|1445
+Dynebio - Februar 2025|33|990|792|0
+Dynebio - Januar 2025|33|990|792|0
+Foredrag: DNA og fossiler udvider vores stamtræ|33|660|528|0
+The Phoenician Scheme|32|2410|1928|0
+OperaKino 25/26 - Turandot fra Wien 2023|31|4650|3720|0
+Min evige sommer|31|2197|1758|1310
+Madame Ida|30|2196|1757|1621
+Emilia Perez|29|2194|1755|1520
+Bambi: Livet i skoven|29|2070|1656|533
+Min mormors millioner|29|2026|1621|1425
+Musenes Jul|29|1958|1566|0
+The Roses|28|2044|1635|930
+OperaKino 25/26 - Nøddeknækkeren fra New York City Ballet 2011|27|3960|3168|0
+De frigjorte|27|2160|1728|800
+Babygirl|27|1947|1558|1455
+Svære sandheder|27|1940|1552|0
+Jeg tror jeg elsker dig - Dk undertekster|26|1964|1571|0
+Skolen med magiske dyr – Venner for altid|26|1814|1451|1310
+Armand|25|1810|1448|1310
+All We Imagine as Light|25|1740|1392|1260
+The Brutalist|24|1784|1427|1335
+Better Man|24|1668|1334|1614
+Mavka: Skovens sjæl - Dk Tale|24|1480|1184|600
+Hypnosen|23|1670|1336|0
+The Life of Chuck|22|1440|1152|1445
+Min evige sommer - med besøg af producer Katja Adomeit|21|1890|1512|1310
+Smølferne - Filmen|21|1424|1139|0
+Prøv at danse argentinsk TANGO|21|1050|840|0
+Det nye år|20|1610|1288|10326
+Superman - 2D|20|1504|1203|1400
+The Great Lillian Hall|20|1455|1164|1310
+Kærlighed (Sex) (Drømme)|20|1340|1072|1260
+OperaKino 25/26 - Skæbnens magt fra Wiener Staatsoper 2008|19|2745|2196|0
+Eddington|19|1352|1082|1614
+DOX:DANMARK: Human Race|19|915|732|0
+OperaKino 24/25 - Andrea Chenier|17|2860|2288|0
+OperaKino 24/25 - Rusalka|16|2305|1844|0
+Grand Prix - poten på pedalen|16|1120|896|0
+Dynebio - Oktober 2025|16|480|384|0
+Diamanti|15|1108|886|1310
+Super Charlie|14|960|768|1635
+Smukkere|14|918|734|1520
+Kensukes kongerige - Dk Tale|14|908|726|1425
+Dynebio - November 2025|14|420|336|0
+Vi Tæller Danmarks Pindsvin|14|0|0|0
+Herkules falder|13|1008|806|310
+Materialists|13|894|715|1510
+Skyggejagt|10|632|506|1425
+Det Skjulte|9|704|563|0
+Hele vejen|9|688|550|1445
+Hypnosen|9|600|480|0
+DOX:DANMARK: Hacking Hate|9|450|360|0
+The Legend of Ochi|8|608|486|1465
+DOX:DANMARK: Miyazaki - Spirit of Nature|8|400|320|0
+The End|7|210|168|1360
+Snedronningen - et H.C. Andersen eventyr|6|432|346|1425
+Noas ark|6|416|333|1425
+Sauna|5|350|280|1439
+Bob Trevino likes it|4|320|256|0
+Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
+
+        // --- STATE & UTILS ---
+        let allData = [];
+        let filteredData = [];
+        let sortConfig = { key: 'tickets', direction: 'desc' };
+        let barChartInstance = null;
+        let pieChartInstance = null;
+
+        // Formatter functions
+        const formatCurrency = (val) => new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK', maximumFractionDigits: 0 }).format(val);
+        const formatNumber = (val) => new Intl.NumberFormat('da-DK').format(val);
+
+        // --- PARSING LOGIC ---
+        function parseData(dataStr) {
+            return dataStr.split('\n')
+                .filter(line => line.trim().length > 0)
+                .map((line, index) => {
+                    const parts = line.split('|');
+                    const title = parts[0].trim();
+                    const tickets = parseInt(parts[1] || '0', 10);
+                    const revenue = parseInt(parts[2] || '0', 10);
+                    const income = parseInt(parts[3] || '0', 10);
+                    const expense = parseInt(parts[4] || '0', 10);
+                    const profit = income - expense;
+                    const marginPerTicket = tickets > 0 ? (profit / tickets) : 0;
+
+                    return { id: index, title, tickets, revenue, income, expense, profit, marginPerTicket };
+                })
+                .filter(item => item.tickets > 0);
+        }
+
+        // --- RENDER FUNCTIONS ---
+        
+        // 1. Render KPI Cards
+        function renderKPIs(data) {
+            const totals = data.reduce((acc, curr) => ({
+                tickets: acc.tickets + curr.tickets,
+                revenue: acc.revenue + curr.revenue,
+                income: acc.income + curr.income,
+                expense: acc.expense + curr.expense,
+                profit: acc.profit + curr.profit
+            }), { tickets: 0, revenue: 0, income: 0, expense: 0, profit: 0 });
+
+            const kpiHTML = `
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 mb-1">Solgte Billetter</p>
+                        <h3 class="text-2xl font-bold text-gray-900">${formatNumber(totals.tickets)}</h3>
+                        <p class="text-xs mt-2 font-medium text-blue-600">Total for 2025</p>
+                    </div>
+                    <div class="p-3 rounded-lg text-blue-600 bg-blue-50">
+                        <!-- Ticket icon -->
+                        <i data-lucide="ticket" class="w-6 h-6"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 mb-1">Omsætning</p>
+                        <h3 class="text-2xl font-bold text-gray-900">${formatCurrency(totals.revenue)}</h3>
+                        <p class="text-xs mt-2 font-medium text-green-600">Brutto Salg</p>
+                    </div>
+                    <div class="p-3 rounded-lg text-green-600 bg-green-50 flex items-center justify-center">
+                        <!-- Custom KR coins icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+                            <circle cx="17" cy="8" r="5"></circle>
+                            <circle cx="10" cy="14" r="8" class="fill-green-50"></circle>
+                            <text x="10" y="17" text-anchor="middle" font-size="8" font-weight="bold" stroke="none" fill="currentColor">KR</text>
+                        </svg>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 mb-1">Samlet Indtægt (Netto)</p>
+                        <h3 class="text-2xl font-bold text-gray-900">${formatCurrency(totals.income)}</h3>
+                        <p class="text-xs mt-2 font-medium text-indigo-600">Ekskl. moms</p>
+                    </div>
+                    <div class="p-3 rounded-lg text-indigo-600 bg-indigo-50">
+                        <i data-lucide="credit-card" class="w-6 h-6"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 mb-1">Samlet Avance</p>
+                        <h3 class="text-2xl font-bold text-gray-900">${formatCurrency(totals.profit)}</h3>
+                        <p class="text-xs mt-2 font-medium text-purple-600">Overskudsgrad: ${totals.income > 0 ? ((totals.profit / totals.income) * 100).toFixed(1) : 0}%</p>
+                    </div>
+                    <div class="p-3 rounded-lg text-purple-600 bg-purple-50">
+                        <i data-lucide="trending-up" class="w-6 h-6"></i>
+                    </div>
+                </div>
+            `;
+            document.getElementById('kpi-container').innerHTML = kpiHTML;
+            document.getElementById('avg-margin-display').textContent = formatCurrency(totals.tickets > 0 ? totals.profit / totals.tickets : 0);
+            
+            // Re-render charts based on these totals
+            renderCharts(data, totals);
+        }
+
+        // 2. Render Charts (Chart.js)
+        function renderCharts(data, totals) {
+            // Bar Chart: Top 10 by Tickets
+            const top10 = [...data].sort((a, b) => b.tickets - a.tickets).slice(0, 10);
+            
+            if (barChartInstance) barChartInstance.destroy();
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            barChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: top10.map(d => d.title.length > 25 ? d.title.substring(0,25) + '...' : d.title),
+                    datasets: [{
+                        label: 'Antal Billetter',
+                        data: top10.map(d => d.tickets),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal bars
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { display: false } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // Pie Chart: Income vs Expense
+            if (pieChartInstance) pieChartInstance.destroy();
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            pieChartInstance = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Overskud', 'Udgifter'],
+                    datasets: [{
+                        data: [totals.profit, totals.expense],
+                        backgroundColor: ['#22c55e', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // 3. Render Table
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            filteredData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-blue-50 transition-colors border-b border-gray-50';
+                
+                // Badge Logic
+                let badgeClass = 'bg-red-100 text-red-700';
+                if (item.marginPerTicket > 50) badgeClass = 'bg-green-100 text-green-700';
+                else if (item.marginPerTicket > 20) badgeClass = 'bg-yellow-100 text-yellow-700';
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-gray-900">${item.title}</td>
+                    <td class="px-6 py-4 text-right">${formatNumber(item.tickets)}</td>
+                    <td class="px-6 py-4 text-right text-gray-600">${formatCurrency(item.revenue)}</td>
+                    <td class="px-6 py-4 text-right text-gray-500 hidden md:table-cell">${formatCurrency(item.income)}</td>
+                    <td class="px-6 py-4 text-right text-red-500 hidden md:table-cell">${item.expense > 0 ? formatCurrency(item.expense) : '-'}</td>
+                    <td class="px-6 py-4 text-right text-green-600 font-medium">${formatCurrency(item.profit)}</td>
+                    <td class="px-6 py-4 text-right">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${badgeClass}">
+                            ${formatCurrency(item.marginPerTicket)}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('rowCount').textContent = `Viser ${filteredData.length} rækker`;
+            lucide.createIcons(); // Refresh icons if any injected
+        }
+
+        // --- INTERACTION ---
+        
+        // Sorting
+        window.sortTable = (key) => {
+            if (sortConfig.key === key) {
+                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortConfig.key = key;
+                sortConfig.direction = 'desc';
+            }
+
+            filteredData.sort((a, b) => {
+                if (a[key] < b[key]) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (a[key] > b[key]) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            renderTable();
+        };
+
+        // Searching
+        document.getElementById('searchInput').addEventListener('keyup', (e) => {
+            const term = e.target.value.toLowerCase();
+            filteredData = allData.filter(item => item.title.toLowerCase().includes(term));
+            
+            // If sort is active, re-sort
+            if(sortConfig.key) {
+                 filteredData.sort((a, b) => {
+                    if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
+                    if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+            renderTable();
+        });
+
+        // Export
+        window.exportToCSV = () => {
+            const headers = ["Titel", "Billetter", "Omsætning", "Indtægt", "Udgift", "Avance", "Avance/Billet"];
+            const rows = filteredData.map(item => [
+                `"${item.title}"`,
+                item.tickets,
+                item.revenue,
+                item.income,
+                item.expense,
+                item.profit,
+                item.marginPerTicket.toFixed(2).replace('.', ',')
+            ]);
+            
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + headers.join(";") + "\n" 
+                + rows.map(e => e.join(";")).join("\n");
+                
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "helios_biograf_data_2025.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        // --- INITIALIZATION ---
+        (function init() {
+            allData = parseData(RAW_DATA);
+            // Default sort by tickets
+            filteredData = [...allData].sort((a,b) => b.tickets - a.tickets);
+            
+            renderKPIs(allData); // Use allData for KPIs always, unless we want KPIs to filter? usually KPIs show global context, Table shows details. Let's keep KPIs global for now.
+            renderTable();
+            lucide.createIcons();
+        })();
+
+    </script>
+</body>
+</html>
