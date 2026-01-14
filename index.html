@@ -99,7 +99,7 @@
                     
                     <div>
                         <h1 class="text-xl font-bold tracking-tight text-white uppercase">Salgsdashboard</h1>
-                        <p class="text-helios-500 text-sm font-medium">Oversigt for 2025</p>
+                        <p class="text-helios-500 text-sm font-medium">Oversigt for 2025 (Inkl. moms)</p>
                     </div>
                 </div>
                 <button onclick="exportToCSV()" class="flex items-center justify-center gap-2 bg-helios-500 hover:bg-helios-400 text-slate-900 px-5 py-2.5 rounded-full font-bold transition-all text-sm shadow-lg shadow-helios-500/20 tracking-wide hover:scale-105">
@@ -160,7 +160,7 @@
             <!-- Pie Chart -->
             <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-800 p-6 flex flex-col relative overflow-hidden">
                 <h2 class="text-lg font-bold text-white mb-2 uppercase tracking-wide">Økonomi</h2>
-                <p class="text-sm text-slate-400 mb-6">Indtægt vs Udgift</p>
+                <p class="text-sm text-slate-400 mb-6">Omsætning vs Udgift (Brutto)</p>
                 <div class="relative h-[250px] w-full flex-grow">
                     <canvas id="pieChart"></canvas>
                 </div>
@@ -201,9 +201,6 @@
                             <th class="px-6 py-4 text-right cursor-pointer hover:bg-slate-900 group transition-colors" onclick="sortTable('revenue')">
                                 Omsætning <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-30 group-hover:opacity-100 group-hover:text-helios-500"></i>
                             </th>
-                            <th class="px-6 py-4 text-right cursor-pointer hover:bg-slate-900 hidden md:table-cell group transition-colors" onclick="sortTable('income')">
-                                Indtægt <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-30 group-hover:opacity-100 group-hover:text-helios-500"></i>
-                            </th>
                             <th class="px-6 py-4 text-right cursor-pointer hover:bg-slate-900 hidden md:table-cell group transition-colors" onclick="sortTable('expense')">
                                 Udgift <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-30 group-hover:opacity-100 group-hover:text-helios-500"></i>
                             </th>
@@ -222,7 +219,7 @@
             </div>
             <div class="p-4 border-t border-slate-800 bg-slate-900 text-xs text-slate-500 flex justify-between font-medium">
                 <span id="rowCount">Henter data...</span>
-                <span>Opdateret 2025</span>
+                <span>Opdateret 2025 (Inkl. moms)</span>
             </div>
         </div>
     </main>
@@ -236,6 +233,7 @@
 
         // --- DATA SECTION ---
         // Raw data string (cleaned format)
+        // Note: Column 3 and 4 are currently Net values in raw string, will be adjusted in parseData
         const RAW_DATA = `Den sidste viking|1091|120533|96426|47437
 Under stjernerne på himlen|636|46509|37207|18436
 Ternet Ninja 3|498|41827|33462|16852
@@ -438,10 +436,22 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
                     const parts = line.split('|');
                     const title = parts[0].trim();
                     const tickets = parseInt(parts[1] || '0', 10);
-                    const revenue = parseInt(parts[2] || '0', 10);
-                    const income = parseInt(parts[3] || '0', 10);
-                    const expense = parseInt(parts[4] || '0', 10);
-                    const profit = income - expense;
+                    const revenue = parseInt(parts[2] || '0', 10); // Omsætning (Gross)
+                    const incomeNet = parseInt(parts[3] || '0', 10); // Indtægt (Net)
+                    const expenseNet = parseInt(parts[4] || '0', 10); // Udgift (Net)
+                    
+                    // Convert net values to gross (25% VAT) for display as requested
+                    const expense = Math.round(expenseNet * 1.25);
+                    
+                    // Since "Indtægt med moms" is basically "Omsætning", we use Revenue here.
+                    // But if we want to show column 3 as something distinct, we can't really if it's identical.
+                    // For calculations, Profit = Revenue - Expense (Gross)
+                    const profit = revenue - expense; 
+                    
+                    // Income field is essentially redundant with Revenue in Gross context, 
+                    // but we'll set it to revenue for consistency if accessed.
+                    const income = revenue; 
+
                     const marginPerTicket = tickets > 0 ? (profit / tickets) : 0;
                     const category = inferCategory(title);
 
@@ -541,9 +551,9 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
                 
                 <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-800 p-6 relative overflow-hidden group hover:border-blue-500/30 transition-all">
                     <div class="relative z-10">
-                        <p class="text-sm font-semibold text-slate-400 mb-1 uppercase tracking-wider">Indtægt (Netto)</p>
-                        <h3 class="text-3xl font-bold text-white">${formatCurrency(totals.income)}</h3>
-                        <p class="text-xs mt-2 font-medium text-blue-950 bg-blue-500 inline-block px-2 py-0.5 rounded shadow-sm">Ex. moms</p>
+                        <p class="text-sm font-semibold text-slate-400 mb-1 uppercase tracking-wider">Samlede Udgifter</p>
+                        <h3 class="text-3xl font-bold text-white">${formatCurrency(totals.expense)}</h3>
+                        <p class="text-xs mt-2 font-medium text-blue-950 bg-blue-500 inline-block px-2 py-0.5 rounded shadow-sm">Inkl. moms</p>
                     </div>
                     <div class="absolute -bottom-5 -right-5 text-blue-500 opacity-20 transform rotate-12 transition-transform group-hover:scale-110 duration-500 pointer-events-none">
                         <i data-lucide="credit-card" class="w-36 h-36"></i>
@@ -555,7 +565,7 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
                         <p class="text-sm font-semibold text-slate-400 mb-1 uppercase tracking-wider">Samlet Avance</p>
                         <h3 class="text-3xl font-bold text-white">${formatCurrency(totals.profit)}</h3>
                         <p class="text-xs mt-2 font-medium text-purple-950 bg-purple-500 inline-block px-2 py-0.5 rounded shadow-sm">
-                            ${totals.income > 0 ? ((totals.profit / totals.income) * 100).toFixed(1) : 0}% Dækningsgrad
+                            ${totals.revenue > 0 ? ((totals.profit / totals.revenue) * 100).toFixed(1) : 0}% Overskudsgrad
                         </p>
                     </div>
                     <div class="absolute -bottom-5 -right-5 text-purple-500 opacity-20 transform rotate-12 transition-transform group-hover:scale-110 duration-500 pointer-events-none">
@@ -700,8 +710,7 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
                     </td>
                     <td class="px-6 py-4 text-right font-medium text-slate-400">${formatNumber(item.tickets)}</td>
                     <td class="px-6 py-4 text-right text-slate-500">${formatCurrency(item.revenue)}</td>
-                    <td class="px-6 py-4 text-right text-slate-600 hidden md:table-cell">${formatCurrency(item.income)}</td>
-                    <td class="px-6 py-4 text-right text-red-900/50 hidden md:table-cell">${item.expense > 0 ? formatCurrency(item.expense) : '-'}</td>
+                    <td class="px-6 py-4 text-right text-slate-600 hidden md:table-cell">${formatCurrency(item.expense)}</td>
                     <td class="px-6 py-4 text-right text-green-400 font-bold">${formatCurrency(item.profit)}</td>
                     <td class="px-6 py-4 text-right">
                         <span class="px-3 py-1 rounded-full text-xs font-bold ${badgeClass}">
@@ -745,13 +754,12 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
 
         // Export
         window.exportToCSV = () => {
-            const headers = ["Titel", "Kategori", "Billetter", "Omsætning", "Indtægt", "Udgift", "Avance", "Avance/Billet"];
+            const headers = ["Titel", "Kategori", "Billetter", "Omsætning (inkl. moms)", "Udgift (inkl. moms)", "Avance (inkl. moms)", "Avance/Billet"];
             const rows = displayedData.map(item => [
                 `"${item.title}"`,
                 item.category,
                 item.tickets,
                 item.revenue,
-                item.income,
                 item.expense,
                 item.profit,
                 item.marginPerTicket.toFixed(2).replace('.', ',')
