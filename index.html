@@ -98,7 +98,7 @@
                     <div class="hidden md:block h-10 w-px bg-slate-700"></div> <!-- Divider -->
                     
                     <div>
-                        <h1 class="text-xl font-bold tracking-tight text-white uppercase">Dashboard over solgte billetter</h1>
+                        <h1 class="text-xl font-bold tracking-tight text-white uppercase">Salgsdashboard</h1>
                         <p class="text-helios-500 text-sm font-medium">Oversigt for 2025</p>
                     </div>
                 </div>
@@ -418,6 +418,10 @@ Taylor Swift - The Official Release Party of a Showgirl|4|220|176|0`;
         // Categorization Helper
         function inferCategory(title) {
             const t = title.toLowerCase();
+            
+            // Specifik undtagelse for Taylor Swift
+            if (t.includes('taylor swift')) return 'Film';
+
             if (t.includes('foredrag') || t.includes('aften om') || t.includes('tapas i toner')) return 'Foredrag';
             if (t.includes('koncert') || t.includes('musik') || t.includes('jazz') || t.includes('pink floyd') || t.includes('springsteen') || t.includes('symfoniorkestret')) return 'Musik';
             if (t.includes('opera')) return 'Opera';
